@@ -11,6 +11,7 @@ PREFIX_INCLUDE=/usr/local/include
 PREFIX_BIN=/usr/local/bin
 UDPDK_VERSION=1.0
 
+RTE_TARGET=x86_64-native-linuxapp-gcc
 # root is only needed to perform install
 ifneq ($(shell id -u), 0)
 ifeq ($(RTE_TARGET),)
@@ -23,7 +24,8 @@ UDPDK_DPDK=${DEPSDIR}/dpdk/${RTE_TARGET}
 INIH=${DEPSDIR}/inih
 
 CFLAGS= -march=native -O2
-CFLAGS+= -Wall -Wno-deprecated-declarations -Werror -Wno-unused-variable
+CFLAGS+= -Wall -Wno-deprecated-declarations -Werror -Wno-unused-variable 
+CFLAGS+= -Wno-error=stringop-truncation
 CFLAGS+= -fno-common -finline-limit=8000
 CFLAGS+= --param inline-unit-growth=100
 CFLAGS+= --param large-function-growth=1000
