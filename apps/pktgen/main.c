@@ -24,7 +24,7 @@
 
 #define PORT_SEND   10000
 #define PORT_RECV   10001
-#define IP_RECV     "172.31.100.1"
+#define IP_RECV     "10.0.0.1"
 
 #define ETH_HDR_LEN 14
 #define IP_HDR_LEN  20
@@ -60,6 +60,9 @@ static int log_enabled = 0;
 static char *log_file;
 static FILE *log;
 static const char *progname;
+static int timeout = -1;
+static int count = 0;
+static pid_t ppid = 0;
 
 static void signal_handler(int signum)
 {
@@ -231,7 +234,7 @@ static int parse_app_args(int argc, char *argv[])
 
     progname = argv[0];
 
-    while ((c = getopt(argc, argv, "c:f:r:s:l:hd")) != -1) {
+    while ((c = getopt(argc, argv, "c:f:r:s:l:t:hd")) != -1) {
         switch (c) {
             case 'c':
                 // this is for the .ini cfg file needed by DPDK, not by the app
@@ -260,6 +263,9 @@ static int parse_app_args(int argc, char *argv[])
                     printf("Error opening log file: %s\n", log_file);
                 }
                 break;
+            case 't':
+                timeout = atoi(optarg) + 10;  // +10 secs for warming up
+                count = 0;
             case 'h':
                 hdr_stats = true;
                 break;
@@ -314,6 +320,13 @@ static void *stats_routine(void *arg)
         stats->bytes_sent_prev = stats->bytes_sent;
         stats->bytes_recv_prev = stats->bytes_recv;
         sleep(1);
+        if (timeout != -1) {
+            if (count == timeout) {
+                printf("Timeout\n");
+                kill(ppid, SIGINT);
+            }
+            count++;
+        }
     }
     return NULL;
 }
@@ -323,10 +336,13 @@ int main(int argc, char *argv[])
     pthread_t stats_thr;
     stats_t stats;
     int retval;
-
+    
     // Register signals for shutdown
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
+
+    // Get pid for timeout
+    ppid = getpid();
 
     // Initialize UDPDK
     retval = udpdk_init(argc, argv);

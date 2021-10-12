@@ -89,8 +89,7 @@ static void ping_body(void)
                 (const struct sockaddr *) &destaddr, len);
 
         // Get pong response
-        n = udpdk_recvfrom(sock, (void *)&ts_msg, sizeof(struct timespec), 0, 
-                (struct sockaddr *) &destaddr, &len);
+        n = udpdk_recvfrom(sock, (void *)&ts_msg, sizeof(struct timespec), 0, NULL, NULL);
         if (n > 0) {
             clock_gettime(CLOCK_REALTIME, &ts_now);
             ts.tv_sec = ts_now.tv_sec - ts_msg.tv_sec;
