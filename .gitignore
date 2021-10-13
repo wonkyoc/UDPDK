@@ -4,4 +4,7 @@
 **/*.ro
 **/*cmake*
 **/CMakeLists.txt
+*.log
+cscope*
+tags
 build/
